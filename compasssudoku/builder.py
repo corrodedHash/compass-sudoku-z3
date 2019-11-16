@@ -78,6 +78,7 @@ class CompassProblemBuilder:
 
     def _base_compass_problem(self) -> None:
         """Generate base compass sudoku problem"""
+        #z3.set_param(verbose=10)
         self.solver = z3.Solver()
         x_dim, y_dim = self.dimensions
 
