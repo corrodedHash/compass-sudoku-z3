@@ -1,52 +1,16 @@
 """Solve crazy hard problem"""
 # https://cracking-the-cryptic.web.app/sudoku/pqg8LG64Tn
-import compass_problem
+import compasssudoku.builder
 
-my_problem = compass_problem.base_compass_problem(4, (8, 8))
+my_problem_builder = compasssudoku.builder.CompassProblemBuilder((8, 8))
 print("Generated problem")
 
-my_problem.add_compass(
-    (1, 1),
-    0,
-    {
-        compass_problem.CardinalDirection.north: 2,
-        compass_problem.CardinalDirection.east: 5,
-        compass_problem.CardinalDirection.south: 3,
-        compass_problem.CardinalDirection.west: 0,
-    },
-)
-print("Add compass")
-my_problem.add_compass(
-    (5, 2),
-    1,
-    {
-        compass_problem.CardinalDirection.north: 1,
-        compass_problem.CardinalDirection.east: 2,
-        compass_problem.CardinalDirection.west: 8,
-    },
-)
-print("Add compass")
-my_problem.add_compass(
-    (2, 5),
-    2,
-    {
-        compass_problem.CardinalDirection.east: 22,
-        compass_problem.CardinalDirection.south: 8,
-        compass_problem.CardinalDirection.west: 9,
-    },
-)
-print("Add compass")
-my_problem.add_compass(
-    (6, 6),
-    3,
-    {
-        compass_problem.CardinalDirection.north: 2,
-        compass_problem.CardinalDirection.east: 3,
-        compass_problem.CardinalDirection.south: 0,
-        compass_problem.CardinalDirection.west: 4,
-    },
-)
-print("Add compass")
-print("Solving...")
+my_problem_builder.add_compass((1, 1), [2, 5, 3, 0])
+my_problem_builder.add_compass((5, 2), [1, 2, -1, 8])
+my_problem_builder.add_compass((2, 5), [-1, 22, 8, 9])
+my_problem_builder.add_compass((6, 6), [2, 3, 0, 4])
+print("Added compasses")
 
+my_problem = my_problem_builder.finalize()
+print("Solving...")
 print(*my_problem.get_result().items(), sep="\n")
