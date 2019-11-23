@@ -1,7 +1,8 @@
 """Contains CompassProblemBuilder class"""
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Tuple, Union
 
 import z3
+import logging
 
 from .problem import CompassProblem
 from .util import (
@@ -12,6 +13,8 @@ from .util import (
     get_direction_cells,
     in_bounds,
 )
+
+MODULE_LOGGER = logging.getLogger(__name__)
 
 
 class CompassProblemBuilder:
@@ -31,6 +34,7 @@ class CompassProblemBuilder:
 
     def finalize(self) -> "CompassProblem":
         """Finalize the building process, return actual problem"""
+
         for cell in self.cells.values():
             self.solver.add(cell < self.compass_count)
 
@@ -60,43 +64,48 @@ class CompassProblemBuilder:
         self.solver.add(self.cells[cell] == compass_id)
         for direction, count in compass_info.items():
             cell_list = get_direction_cells(cell, self.dimensions, direction)
-            current_compass_helper = 0
+            current_compass_counter = 0
             for index, cell_coord in enumerate(cell_list):
-                last_compass_helper = current_compass_helper
-                current_compass_helper = z3.Int(
-                    f"compass_{compass_id}_{direction.name}_#{index}"
-                    f"_{cell_coord[0]}_{cell_coord[1]}"
+                last_compass_counter = current_compass_counter
+                current_compass_counter = z3.Int(
+                    f"compass_{compass_id}_{direction.name}_[{index:02}]"
+                    f"_({cell_coord[0]},{cell_coord[1]})"
                 )
                 self.solver.add(
-                    z3.If(
-                        self.cells[cell_coord] == compass_id,
-                        current_compass_helper == last_compass_helper + 1,
-                        current_compass_helper == last_compass_helper,
+                    current_compass_counter
+                    == (
+                        last_compass_counter
+                        + z3.If(self.cells[cell_coord] == compass_id, 1, 0)
                     )
                 )
-            self.solver.add(current_compass_helper == count)
+            self.solver.add(current_compass_counter == count)
+        MODULE_LOGGER.debug('Added compass')
 
     def _base_compass_problem(self) -> None:
         """Generate base compass sudoku problem"""
-        #z3.set_param(verbose=10)
         self.solver = z3.Solver()
         x_dim, y_dim = self.dimensions
 
         self.cells = {
-            (x, y): z3.Int(f"cells_{x}_{y}") for x in range(x_dim) for y in range(y_dim)
+            (x, y): z3.Int(f"cell_({x},{y})") for x in range(x_dim) for y in range(y_dim)
         }
+        MODULE_LOGGER.debug('Created cell variables')
 
         for cell in self.cells.values():
             self.solver.add(cell >= 0)
+        MODULE_LOGGER.debug('Created cell constraints')
+
+
 
         connectivity = {
-            ((x1, y1), (x2, y2)): z3.Int(f"conn_{x1}_{y1}-{x2}_{y2}")
+            ((x1, y1), (x2, y2)): z3.Int(f"conn_({x1},{y1})->({x2}_{y2})")
             for x1 in range(x_dim)
             for y1 in range(y_dim)
             for x2 in range(x_dim)
             for y2 in range(y_dim)
             if y2 > y1 or (y2 == y1 and x2 > x1)
         }
+        MODULE_LOGGER.debug('Created connectivity variables')
 
         def get_conn_index(c1: Coord2D, c2: Coord2D) -> Tuple[Coord2D, Coord2D]:
             if c2[1] > c1[1] or (c2[1] == c1[1] and c2[0] > c1[0]):
@@ -119,7 +128,8 @@ class CompassProblemBuilder:
                 assert len(neighbors) >= 2
                 self.solver.add(
                     z3.Implies(
-                        conn != -1,
-                        z3.Or([z3.And(x == conn - 1, x != -1) for x in neighbors]),
+                        conn > 1,
+                        z3.Or([x == conn - 1 for x in neighbors]),
                     )
                 )
+        MODULE_LOGGER.debug('Created connectivity constraints')

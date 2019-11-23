@@ -13,5 +13,6 @@ print("Added compasses")
 
 my_problem = my_problem_builder.finalize()
 print("Solving...")
+print(my_problem.solver.sexpr())
 my_result = my_problem.get_result()
 print(my_result.table())

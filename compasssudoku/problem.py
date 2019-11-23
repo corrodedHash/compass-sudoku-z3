@@ -37,7 +37,7 @@ class CompassProblem:
     solver: z3.Solver
     dimensions: Coord2D
 
-    def get_result(self) -> Dict[Coord2D, int]:
+    def get_result(self) -> CompassSolution:
         """Get result for problem"""
         self.solver.check()
         my_model = self.solver.model()
