@@ -1,18 +1,12 @@
 """Contains CompassProblemBuilder class"""
+import logging
 from typing import Dict, List, Tuple, Union
 
 import z3
-import logging
 
 from .problem import CompassProblem
-from .util import (
-    CardinalDirection,
-    Coord2D,
-    DirectionMap,
-    add_coords,
-    get_direction_cells,
-    in_bounds,
-)
+from .util import (CardinalDirection, Coord2D, DIRECTION_MAP, add_coords,
+                   get_direction_cells, in_bounds)
 
 MODULE_LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +115,7 @@ class CompassProblemBuilder:
             if distance > 1:
                 self.solver.add((self.cells[c1] == self.cells[c2]) == (conn > 1))
                 neighbors = []
-                for direction_vector in DirectionMap.values():
+                for direction_vector in DIRECTION_MAP.values():
                     new_cell = add_coords(c2, direction_vector)
                     if in_bounds(new_cell, self.dimensions):
                         neighbors.append(connectivity[get_conn_index(c1, new_cell)])

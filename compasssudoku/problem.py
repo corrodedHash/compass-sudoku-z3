@@ -1,5 +1,4 @@
 """Contains CompassProblem class"""
-from collections import OrderedDict
 from typing import Dict
 
 import z3
