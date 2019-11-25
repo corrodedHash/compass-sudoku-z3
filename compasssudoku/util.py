@@ -12,7 +12,6 @@ class CardinalDirection(enum.Enum):
     south = enum.auto()
     west = enum.auto()
 
-
 DIRECTION_MAP = {
     CardinalDirection.north: (0, -1),
     CardinalDirection.east: (1, 0),

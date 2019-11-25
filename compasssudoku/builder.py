@@ -5,10 +5,48 @@ from typing import Dict, List, Tuple, Union
 import z3
 
 from .problem import CompassProblem
-from .util import (CardinalDirection, Coord2D, DIRECTION_MAP, add_coords,
-                   get_direction_cells, in_bounds)
+from .util import (
+    CardinalDirection,
+    Coord2D,
+    DIRECTION_MAP,
+    add_coords,
+    get_direction_cells,
+    in_bounds,
+)
 
 MODULE_LOGGER = logging.getLogger(__name__)
+
+
+class Compass:
+    """Contains information for single compass cell in the compass sudoku problem"""
+
+    position: Coord2D
+    _info: Dict[CardinalDirection, int]
+
+    def __init__(
+        self, position: Coord2D, info: Union[Dict[CardinalDirection, int], List[int]]
+    ):
+        self.position = position
+        self.info = info
+
+    @property
+    def info(self) -> List[int]:
+        """Returns the information this compass provides for the different directions"""
+        return self._info
+
+    @info.setter
+    def info(self, infos: Union[Dict[CardinalDirection, int], List[int]]):
+        if isinstance(infos, list):
+            self._info = {}
+            assert len(infos) == 4
+            for direction, amount in zip(CardinalDirection, infos):
+                if amount >= 0:
+                    self._info[direction] = amount
+            infos = self._info
+        elif isinstance(infos, dict):
+            self._info = infos
+        else:
+            raise TypeError("Unknown type in override function")
 
 
 class CompassProblemBuilder:
@@ -38,26 +76,17 @@ class CompassProblemBuilder:
         result.solver = self.solver
         return result
 
-    def add_compass(
-        self,
-        cell: Coord2D,
-        compass_info: Union[Dict[CardinalDirection, int], List[int]],
-    ) -> None:
+    def add_compass(self, compass: Compass,) -> None:
         """Add compass to field"""
-        if not isinstance(compass_info, dict):
-            actual_info = {}
-            assert len(compass_info) == 4
-            for direction, amount in zip(CardinalDirection, compass_info):
-                if amount >= 0:
-                    actual_info[direction] = amount
-            compass_info = actual_info
 
         compass_id = self.compass_count
         self.compass_count += 1
 
-        self.solver.add(self.cells[cell] == compass_id)
-        for direction, count in compass_info.items():
-            cell_list = get_direction_cells(cell, self.dimensions, direction)
+        self.solver.add(self.cells[compass.position] == compass_id)
+        for direction, count in compass.info.items():
+            cell_list = get_direction_cells(
+                compass.position, self.dimensions, direction
+            )
             current_compass_counter = 0
             for index, cell_coord in enumerate(cell_list):
                 last_compass_counter = current_compass_counter
@@ -73,7 +102,7 @@ class CompassProblemBuilder:
                     )
                 )
             self.solver.add(current_compass_counter == count)
-        MODULE_LOGGER.debug('Added compass')
+        MODULE_LOGGER.debug("Added compass")
 
     def _base_compass_problem(self) -> None:
         """Generate base compass sudoku problem"""
@@ -81,15 +110,15 @@ class CompassProblemBuilder:
         x_dim, y_dim = self.dimensions
 
         self.cells = {
-            (x, y): z3.Int(f"cell_({x},{y})") for x in range(x_dim) for y in range(y_dim)
+            (x, y): z3.Int(f"cell_({x},{y})")
+            for x in range(x_dim)
+            for y in range(y_dim)
         }
-        MODULE_LOGGER.debug('Created cell variables')
+        MODULE_LOGGER.debug("Created cell variables")
 
         for cell in self.cells.values():
             self.solver.add(cell >= 0)
-        MODULE_LOGGER.debug('Created cell constraints')
-
-
+        MODULE_LOGGER.debug("Created cell constraints")
 
         connectivity = {
             ((x1, y1), (x2, y2)): z3.Int(f"conn_({x1},{y1})->({x2}_{y2})")
@@ -99,7 +128,7 @@ class CompassProblemBuilder:
             for y2 in range(y_dim)
             if y2 > y1 or (y2 == y1 and x2 > x1)
         }
-        MODULE_LOGGER.debug('Created connectivity variables')
+        MODULE_LOGGER.debug("Created connectivity variables")
 
         def get_conn_index(c1: Coord2D, c2: Coord2D) -> Tuple[Coord2D, Coord2D]:
             if c2[1] > c1[1] or (c2[1] == c1[1] and c2[0] > c1[0]):
@@ -121,9 +150,6 @@ class CompassProblemBuilder:
                         neighbors.append(connectivity[get_conn_index(c1, new_cell)])
                 assert len(neighbors) >= 2
                 self.solver.add(
-                    z3.Implies(
-                        conn > 1,
-                        z3.Or([x == conn - 1 for x in neighbors]),
-                    )
+                    z3.Implies(conn > 1, z3.Or([x == conn - 1 for x in neighbors]),)
                 )
-        MODULE_LOGGER.debug('Created connectivity constraints')
+        MODULE_LOGGER.debug("Created connectivity constraints")
