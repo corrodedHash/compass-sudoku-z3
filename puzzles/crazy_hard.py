@@ -1,20 +1,20 @@
 """Solve crazy hard problem"""
 # https://cracking-the-cryptic.web.app/sudoku/pqg8LG64Tn
-from compasssudoku.builder import Compass, CompassProblemBuilder
+from compasssudoku.builder import Compass, build_compass_problem
 
 
-def main():
+def main() -> None:
     """Main function"""
-    my_problem_builder = CompassProblemBuilder((8, 8))
-    print("Generated problem")
+    my_problem = build_compass_problem(
+        (8, 8),
+        [
+            Compass((1, 1), [2, 5, 3, 0]),
+            Compass((5, 2), [1, 2, -1, 8]),
+            Compass((2, 5), [-1, 22, 8, 9]),
+            Compass((6, 6), [2, 3, 0, 4]),
+        ],
+    )
 
-    my_problem_builder.add_compass(Compass((1, 1), [2, 5, 3, 0]))
-    my_problem_builder.add_compass(Compass((5, 2), [1, 2, -1, 8]))
-    my_problem_builder.add_compass(Compass((2, 5), [-1, 22, 8, 9]))
-    my_problem_builder.add_compass(Compass((6, 6), [2, 3, 0, 4]))
-    print("Added compasses")
-
-    my_problem = my_problem_builder.finalize()
     print("Solving...")
     print(my_problem.get_result().table())
 

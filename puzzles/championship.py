@@ -15,7 +15,7 @@ Known solution:
 """
 import logging
 
-from compasssudoku.builder import Compass, CompassProblemBuilder
+from compasssudoku.builder import Compass, build_compass_problem
 import compasssudoku.builder
 
 
@@ -28,19 +28,20 @@ def main() -> None:
     )
     compasssudoku.builder.MODULE_LOGGER.setLevel(logging.DEBUG)
 
-    my_problem_builder = CompassProblemBuilder((9, 9))
-
-    my_problem_builder.add_compass(Compass((2, 2), [1, -1, -1, -1]))
-    my_problem_builder.add_compass(Compass((6, 2), [-1, -1, -1, 0]))
-    my_problem_builder.add_compass(Compass((3, 3), [2, -1, 1, 2]))
-    my_problem_builder.add_compass(Compass((5, 3), [1, 0, -1, -1]))
-    my_problem_builder.add_compass(Compass((4, 4), [-1, 4, 5, 4]))
-    my_problem_builder.add_compass(Compass((3, 5), [-1, -1, -1, 6]))
-    my_problem_builder.add_compass(Compass((5, 5), [2, 1, -1, 3]))
-    my_problem_builder.add_compass(Compass((2, 6), [-1, -1, 7, -1]))
-    my_problem_builder.add_compass(Compass((6, 6), [1, 0, 0, -1]))
-
-    my_problem = my_problem_builder.finalize()
+    my_problem = build_compass_problem(
+        (9, 9),
+        [
+            Compass((2, 2), [1, -1, -1, -1]),
+            Compass((6, 2), [-1, -1, -1, 0]),
+            Compass((3, 3), [2, -1, 1, 2]),
+            Compass((5, 3), [1, 0, -1, -1]),
+            Compass((4, 4), [-1, 4, 5, 4]),
+            Compass((3, 5), [-1, -1, -1, 6]),
+            Compass((5, 5), [2, 1, -1, 3]),
+            Compass((2, 6), [-1, -1, 7, -1]),
+            Compass((6, 6), [1, 0, 0, -1]),
+        ],
+    )
     print("Solving...")
     my_result = my_problem.get_result()
     print(my_result.table())

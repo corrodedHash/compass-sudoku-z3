@@ -1,18 +1,11 @@
 """Solve easy compass sudoku puzzle"""
 # https://cracking-the-cryptic.web.app/sudoku/qbQq9d9JDm
-from compasssudoku.builder import Compass, CompassProblemBuilder
+from compasssudoku.builder import Compass, build_compass_problem
 
 
-def main():
+def main() -> None:
     """Main function"""
-    my_problem_builder = CompassProblemBuilder((2, 2))
-    print("Generated base problem")
-
-    my_problem_builder.add_compass(Compass((1, 0), [0, 0, 2, 2]))
-    print("Added compasses")
-
-    my_problem = my_problem_builder.finalize()
-    print("Solving...")
+    my_problem = build_compass_problem((2, 2), [Compass((1, 0), [0, 0, 2, 2])])
 
     print(my_problem.get_result().table())
 
